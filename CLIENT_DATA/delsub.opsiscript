@@ -1,0 +1,52 @@
+include_append "%ScriptPath%\check_inno_exitcode.opsiscript"
+
+; Variablen anlegen
+DefVar $iter$
+DefStringList $prodStatusReset$
+DefVar $found$
+DefVar $UninstallProgram$
+
+Set $found$     = "false"
+Set $MsiId$     = ''
+; Product property auslesen
+Set $prodStatusReset$ = GetProductPropertyList("reset_products","")
+
+Message "Uninstalling " + $ProductId$ + " ..."
+
+if ($SetupType$ = "inno")
+   Set $UninstallProgram$ = $InstallDir$ + "\unins000.exe"
+   if (not($InstallDir$ = '')) and FileExists($UninstallProgram$)
+      comment "Uninstall program found, starting uninstall"
+      Winbatch_uninstall_inno
+      sub_check_exitcode
+
+			comment "Reset product states on opsi server"
+			for %iter% in $prodStatusReset$ do Sub_resetStates
+				endif
+			endif
+
+if (not($InstallDir$ = '')) and (not($InstallDir$ = "not used"))
+   Files_uninstall
+endif
+
+;-----------------------------------------------------
+[Winbatch_uninstall_inno]
+"$UninstallProgram$" /SILENT /NORESTART /LOG="$LogDir$\$ProductId$.uninst.log"
+;-----------------------------------------------------
+
+[Files_uninstall]
+del -sf "$InstallDir$\"
+;-----------------------------------------------------
+
+; ------------------------------------------------------------------------
+[Sub_resetStates]
+Set $iter$="%iter%"
+opsiServiceCall_setState_FP
+
+[opsiServiceCall_setState_FP]
+ "method": "setProductInstallationStatus"
+ "params": [
+            "$iter$",
+            "%hostId%",
+            "not_installed"
+           ]

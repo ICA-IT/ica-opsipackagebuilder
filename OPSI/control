@@ -1,0 +1,65 @@
+[Package]
+version: 1
+depends: 
+
+[Product]
+type: localboot
+id: ica-opsipackagebuilder
+name: ica-opsipackagebuilder
+description: The opsi PackageBuilder is as an aid for building opsi software packages. Note that only 64 bit Windows is supported.
+advice: A ScriptEditor is supplied with useful functions for creating installation scripts. This editor offers you syntax highlighting, call tips, autocomplete, code folding, etc. and is individually configurable. For an alternative script editor, you might try the jEdit opsi product.
+Note: The proper configuration of PackageBuilder is tricky. An example of a working configuration file is included in the install folder. Copy the file to your AppData/Roaming/opsiPackageBuilder folder. Then fire up PackageBuilder and use the settings panel to adjust your server name, user, password, opsi version, Package Maintainer, and mail address.
+version: 8.4.4
+priority: 0
+licenseRequired: False
+productClasses: 
+setupScript: setup.opsiscript
+uninstallScript: uninstall.opsiscript
+updateScript: 
+alwaysScript: 
+onceScript: 
+customScript: 
+userLoginScript: 
+
+[ProductProperty]
+type: unicode
+name: reset_products
+multivalue: True
+editable: True
+description: Set product status to uninstalled after deinstallation
+values: ["opsipackagebuilder-config"]
+default: ["opsipackagebuilder-config"]
+
+[ProductProperty]
+type: unicode
+name: updater
+multivalue: False
+editable: False
+description: Enable/disable internal Updater permanently.
+values: ["disable", "enable"]
+default: ["enable"]
+
+[ProductProperty]
+type: unicode
+name: lang
+multivalue: False
+editable: False
+description: Program language
+values: ["english", "german"]
+default: ["english"]
+
+[ProductProperty]
+type: unicode
+name: setup_type
+multivalue: False
+editable: False
+description: Setup type
+values: ["Executable", "Full", "Source"]
+default: ["Executable"]
+
+[Changelog]
+opsipackagebuilder (8.4.X-1) stable; urgency=low
+
+Official Release
+
+ -- Holger Pandel <holger.pandel@googlemail.de>  Thu, 08 Nov 2018 16:12:56 +0000

@@ -1,0 +1,121 @@
+[Actions]
+requiredWinstVersion >= "4.11.3.4"
+ScriptErrorMessages = false
+
+DefVar $SetupType$
+DefVar $ProductId$ 
+DefVar $Setupfile$ 
+DefVar $InstallDir$
+DefVar $MinimumSpace$
+DefVar $ExitCode$
+DefVar $ErrorMsg$
+DefVar $LicenseRequired$
+DefVar $LicenseKey$
+DefVar $LicensePool$
+DefVar $MsiId$
+DefVar $NsisInstallBatch$
+DefVar $LogDir$
+DefVar $propSetup$
+DefVar $propLang$
+DefVar $propUpdater$
+DefVar $upd$
+DefVar $options$
+;Welche Windows-Version?
+DefVar $MSVersion$
+DefVar $language$
+DefStringList $languageInfo$
+
+DefVar $WinVer$
+DefVar $WinSysType$
+DefVar $WinTypeExt$
+Set $WinVer$ = GetMsVersionInfo
+Set $WinSysType$ = GetSystemType
+Set $WinTypeExt$ = "x64"
+if ($WinSysType$ = "x86 System")
+    Set $WinTypeExt$ = "x86"
+endif   
+
+Set $LogDir$ = "%opsiLogDir%"
+
+include_append "%ScriptPath%\check_inno_exitcode.opsiscript"
+
+; ----------------------------------------------------------------
+Set $SetupType$       = "inno"
+; ----------------------------------------------------------------
+
+; $ProductId$ is the name of the product in opsi, only lower letters, no umlauts, no white spaces, use '-' as a seperator
+Set $ProductId$       = "ica-opsipackagebuilder"
+Set $Setupfile$       = "opsiPackageBuilder-v8.4.4.exe"
+; the path where we find the product after the installation
+Set $InstallDir$      = "%ProgramFiles32Dir%\opsi PackageBuilderNG"
+Set $LicenseRequired$ = "false"
+Set $LicensePool$     = "p_" + $ProductId$
+Set $MsiId$           = ""
+Set $MinimumSpace$    = "30 MB"
+Set $propLang$ = GetProductProperty("lang","english")
+Set $propSetup$ = GetProductProperty("setup_type","Executable")
+Set $propUpdater$ = GetProductProperty("updater","enable")
+; ----------------------------------------------------------------
+
+if not(HasMinimumSpace ("%SystemDrive%", $MinimumSpace$))
+   LogError "Not enough space on %SystemDrive%, " + $MinimumSpace$ + " on drive %SystemDrive% needed for " + $ProductId$
+   isFatalError "No Space"
+   ; Stop process and set installation status to failed
+else
+	if ($WinSysType$ = "x86 System")
+    	Set $WinTypeExt$ = "x86"
+    	LogError "A 32 bit version of Windows was detected. A 64 bit version is needed for " + $ProductId$
+    	isFatalError "32 bit OS"
+    	; Stop process and set installation status to failed
+	else   
+
+		comment "Show product picture"
+   		ShowBitmap "%ScriptPath%\" + $ProductId$ + ".png" $ProductId$
+
+   		if FileExists("%ScriptPath%\delsub.opsiscript")
+   			comment "Start uninstall sub section"
+   			Sub "%ScriptPath%\delsub.opsiscript"
+   		endif
+   
+   		Message "Installing " + $ProductId$ + " ..."
+   
+      	comment "Start setup program"
+      	ChangeDirectory "%SCRIPTPATH%"
+      	;----------------------------------------------
+		Set $MSVersion$ = GetMsVersionInfo
+		Set $languageInfo$ = getLocaleInfoMap
+		Set $language$ = getValue("language_id_2chars", $languageInfo$)
+
+ 		If $propUpdater$ = "enable"
+ 			Set $upd$ = "1"
+ 			Winbatch_install_inno
+ 			Sub_check_exitcode	
+ 		else
+ 			Set $upd$ = "0"
+ 			Winbatch_install_inno_noupd
+ 			Sub_check_exitcode	
+ 		EndIf
+
+		comment "Copy sample config file"
+		Files_install /32Bit
+	
+	endif
+endif
+
+; ----------------------------------------------------------------
+; install section
+; ----------------------------------------------------------------
+
+[Winbatch_install_inno]
+"%ScriptPath%\$Setupfile$" /sp- /silent /norestart /nocancel /SUPPRESSMSGBOXES /TYPE="$propSetup$" /LANG="$propLang$" /LOG="$LogDir$\$ProductId$.inst.log"
+
+[Winbatch_install_inno_noupd]
+"%ScriptPath%\$Setupfile$" /sp- /silent /norestart /nocancel /SUPPRESSMSGBOXES /TYPE="$propSetup$" /LANG="$propLang$" /MERGETASKS="noupdate" /LOG="$LogDir$\$ProductId$.inst.log"
+
+[Files_install]
+ copy "%ScriptPath%\files\config-new.ini" "$InstallDir$"
+
+; ----------------------------------------------------------------
+
+; ----------------------------------------------------------------
+; ----------------------------------------------------------------
