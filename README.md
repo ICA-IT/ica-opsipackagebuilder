@@ -1,0 +1,2 @@
+# ica-opsipackagebuilder
+The opsi PackageBuilder is as an aid for building opsi software packages. A ScriptEditor is supplied with useful functions for creating installation scripts. This editor offers you syntax highlighting, call tips, autocomplete, code folding, etc. and is individually configurable. However, this editor is broken on modern versions of Windows. For an alternative, try the jEdit opsi product.
